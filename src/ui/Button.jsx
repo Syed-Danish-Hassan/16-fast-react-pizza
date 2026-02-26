@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 
-function Button({ children, disabled, to, type }) {
+function Button({ children, disabled, to, type, onClick }) {
   // const className =
   //   'upercase inline-block rounded-full bg-yellow-400 px-4 py-3 font-semibold tracking-wide text-stone-800 outline-none transition-colors duration-300 ease-in-out hover:bg-yellow-300 focus:ring focus:ring-yellow-300 focus:ring-offset-2 active:bg-slate-400 sm:px-6 sm:py-4';
 
@@ -19,12 +19,19 @@ function Button({ children, disabled, to, type }) {
         {children}
       </Link>
     );
-  } else
+  }
+  if (onClick) {
     return (
-      <button disabled={disabled} className={styles[type]}>
+      <button onClick={onClick} disabled={disabled} className={styles[type]}>
         {children}
       </button>
     );
+  }
+  return (
+    <button disabled={disabled} className={styles[type]}>
+      {children}
+    </button>
+  );
 }
 
 export default Button;
