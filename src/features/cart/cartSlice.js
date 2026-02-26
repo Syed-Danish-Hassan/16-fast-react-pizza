@@ -33,8 +33,13 @@ const cartSlice = createSlice({
     decreaseItemQuantity: (state, action) => {
       //payload here = pizzaId
       const item = state.cart.find((item) => item.pizzaId === action.payload);
+
       item.quantity--;
       item.totalPrice = item.quantity * item.unitPrice;
+      if (item.quantity === 0) {
+        //calling the deleteItem function in thesame reducer, to avoid code duplication
+        cartSlice.caseReducers.deleteItem(state, action);
+      }
     },
     clearCart: (state, action) => {
       state.cart = [];
@@ -57,5 +62,15 @@ export const getTotalCartQuantity = (state) =>
 
 export const getTotalCartPrice = (state) =>
   state.cart.cart.reduce((sum, item) => sum + item.totalPrice, 0);
+
+export const getCurrentQuantityById = (id) => (state) => {
+  const item = state.cart.cart.find((item) => item.pizzaId === id);
+  return item ? item.quantity : 0;
+};
+
+// export const decreaseItemQuantity = (pizzaId) => (state) => {
+//   const item = state.cart.cart.find((item) => item.pizzaId === pizzaId);
+//   return item ? item.quantity - 1 : 0;
+// };
 
 //reselect library for memoization of selectors, so they only recompute when their inputs change, improving performance.

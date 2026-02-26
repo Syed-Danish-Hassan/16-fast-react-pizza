@@ -1,49 +1,62 @@
-//import { useState } from "react";
-import { Form, useActionData, useNavigation } from 'react-router-dom';
-//import { createOrder } from '../../services/apiRestaurant';
+import { Form, useActionData, useNavigation, redirect } from 'react-router-dom';
 import Button from '../../ui/Button';
 import { useSelector } from 'react-redux';
+import { clearCart, getCart, getTotalCartPrice } from '../cart/cartSlice';
+import EmptyCart from '../cart/EmptyCart';
+import store from '../../store';
+import { formatCurrency } from '../../utils/helpers';
+import { useState } from 'react';
+import { createOrder } from '../../services/apiRestaurant';
 // https://uibakery.io/regex-library/phone-number
 const isValidPhone = (str) =>
   /^\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}$/.test(
     str,
   );
 
-const fakeCart = [
-  {
-    pizzaId: 12,
-    name: 'Mediterranean',
-    quantity: 2,
-    unitPrice: 16,
-    totalPrice: 32,
-  },
-  {
-    pizzaId: 6,
-    name: 'Vegetale',
-    quantity: 1,
-    unitPrice: 13,
-    totalPrice: 13,
-  },
-  {
-    pizzaId: 11,
-    name: 'Spinach and Mushroom',
-    quantity: 1,
-    unitPrice: 15,
-    totalPrice: 15,
-  },
-];
+// const fakeCart = [
+//   {
+//     pizzaId: 12,
+//     name: 'Mediterranean',
+//     quantity: 2,
+//     unitPrice: 16,
+//     totalPrice: 32,
+//   },
+//   {
+//     pizzaId: 6,
+//     name: 'Vegetale',
+//     quantity: 1,
+//     unitPrice: 13,
+//     totalPrice: 13,
+//   },
+//   {
+//     pizzaId: 11,
+//     name: 'Spinach and Mushroom',
+//     quantity: 1,
+//     unitPrice: 15,
+//     totalPrice: 15,
+//   },
+// ];
 
 function CreateOrder() {
   const navigation = useNavigation();
   const isSubmitting = navigation.state === 'submitting';
   const formErrors = useActionData();
   const username = useSelector((state) => state.user.username);
-
+  const [withPriority, setWithPriority] = useState(false);
   console.log(formErrors);
 
   //const navigate = useNavigate();
   // const [withPriority, setWithPriority] = useState(false);
-  const cart = fakeCart;
+
+  //const cart = fakeCart;
+  const cart = useSelector(getCart);
+  const totalCartPrice = useSelector(getTotalCartPrice);
+  const priorityPrice = withPriority ? totalCartPrice * 0.2 : 0;
+  const totalPrice = totalCartPrice + priorityPrice;
+  //  console.log('Cart in CreateOrder:', cart);
+  if (cart.length === 0) {
+    return <EmptyCart />;
+  }
 
   return (
     <div className="px-4 py-6">
@@ -94,8 +107,8 @@ function CreateOrder() {
             name="priority"
             id="priority"
             className="h-6 w-6 border border-stone-200 px-4 py-2 accent-yellow-400 focus:outline-none focus:ring focus:ring-yellow-400 focus:ring-offset-2"
-            // value={withPriority}
-            // onChange={(e) => setWithPriority(e.target.checked)}
+            value={withPriority}
+            onChange={(e) => setWithPriority(e.target.checked)}
           />
           <label htmlFor="priority" className="font-medium">
             Want to yo give your order priority?
@@ -108,7 +121,9 @@ function CreateOrder() {
             className="upercase inline-block rounded-full bg-yellow-400 px-4 py-3 font-semibold tracking-wide text-stone-800 outline-none transition-colors duration-300 ease-in-out hover:bg-yellow-300 focus:ring focus:ring-yellow-300 focus:ring-offset-2 active:bg-slate-400"
           > */}
           <Button disabled={isSubmitting} type="primary">
-            {isSubmitting ? 'Placing order...' : 'Order now'}
+            {isSubmitting
+              ? 'Placing order...'
+              : `Order now from ${formatCurrency(totalPrice)}`}
           </Button>
           {/* </button> */}
         </div>
@@ -125,7 +140,7 @@ export async function action({ request }) {
   const order = {
     ...data,
     cart: JSON.parse(data.cart),
-    priority: data.priority === 'on' ? true : false,
+    priority: data.priority === 'true',
   };
 
   const errors = {};
@@ -137,7 +152,7 @@ export async function action({ request }) {
   }
   console.log(order);
   // ///if everything is okay  then create order and redirect
-  // const newOrder = await createOrder(order);
+  const newOrder = await createOrder(order);
 
   // // Validate the data
   // // if (!data.customer || data.customer.length < 2) {
@@ -147,9 +162,10 @@ export async function action({ request }) {
   // //   return { error: "Phone number is not valid" };
   // // }
 
-  // return redirect(`/order/${newOrder.id}`);
+  store.dispatch(clearCart());
+  return redirect(`/order/${newOrder.id}`);
 
-  return null;
+  //return null;
 }
 
 export default CreateOrder;
