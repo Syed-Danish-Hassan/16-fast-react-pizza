@@ -50,7 +50,7 @@ function CreateOrder() {
     address,
     error: errorAddress,
   } = useSelector((state) => state.user);
-
+  console.log('the user name is ', username);
   const isLoadingAddress = addressStatus === 'loading';
   const [withPriority, setWithPriority] = useState(false);
   console.log(formErrors);

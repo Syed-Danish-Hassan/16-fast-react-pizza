@@ -2,6 +2,7 @@ import { useSelector } from 'react-redux';
 
 function UserName() {
   const username = useSelector((state) => state.user.username);
+  console.log('the user name in the UserName component is ', username);
   if (!username) return null;
   return (
     <div className="hidden text-sm font-semibold md:block">{username}</div>
